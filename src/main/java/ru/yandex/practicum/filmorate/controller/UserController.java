@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.validators.UserValidator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
-    private static final Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
 
     @GetMapping
     public List<User> getAll() {
@@ -25,10 +25,12 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
+    public User create(@Valid @RequestBody User user) {
         log.info("Поступил запрос на создание нового пользователя");
-        UserValidator.userValidation(user);
-        log.info("Запрос прошел валидацию и отправлен на создание");
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+            log.info("Был пользователь с пустым именем");
+        }
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.info("Создание нового пользователя завершено");
@@ -36,10 +38,8 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
+    public User update(@Valid @RequestBody User user) {
         log.info("Поступил запрос на обновление пользователя");
-        UserValidator.userValidation(user);
-        log.info("Запрос прошел валидацию");
         if (user.getId() == null) {
             throw new ValidationException("Введен неверный id");
         }

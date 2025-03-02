@@ -17,11 +17,9 @@ public class Film {
     @NotBlank(message = "Имя не может быть пустым")
     private String name;
 
-    @NotBlank(message = "Описание не может быть пустым")
     @Size(max = 200, message = "Слишком длинное описание")
     private String description;
 
-    @NotNull(message = "Дата выпуска фильма не может быть пустой")
     @ReleaseDate
     private LocalDate releaseDate;
 

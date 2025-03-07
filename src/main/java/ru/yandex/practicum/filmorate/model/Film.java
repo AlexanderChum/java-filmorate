@@ -7,6 +7,8 @@ import lombok.Data;
 import ru.yandex.practicum.filmorate.validators.ReleaseDate;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Data
@@ -24,4 +26,6 @@ public class Film {
 
     @Positive(message = "Длина фильма не может быть меньше 0")
     private Long duration;
+
+    private Set<Long> likeSet = new HashSet<>();
 }

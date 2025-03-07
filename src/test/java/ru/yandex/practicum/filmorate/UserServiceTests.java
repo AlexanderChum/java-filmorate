@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-class UserServiceTest {
+class UserServiceTests {
     private static UserStorage userStorage;
     private static UserService userService;
 

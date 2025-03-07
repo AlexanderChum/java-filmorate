@@ -16,7 +16,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.time.LocalDate;
 import java.util.*;
 
-class FilmServiceTest {
+class FilmServiceTests {
     private static FilmStorage filmStorage;
     private static UserStorage userStorage;
     private static FilmService filmService;

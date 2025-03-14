@@ -18,14 +18,15 @@ public class UserService {
     private final UserStorage userStorage;
 
     public List<User> getAllUsers() {
+        log.trace("Поступил запрос на получение списка пользователей");
         return userStorage.getAll();
     }
 
     public User createUser(User user) {
-        log.info("Поступил запрос на создание нового пользователя");
+        log.trace("Поступил запрос на создание нового пользователя");
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            log.info("Был пользователь с пустым именем");
+            log.trace("Пользователь с пустым именем");
         }
         userStorage.save(user);
         log.info("Создание нового пользователя завершено");
@@ -33,13 +34,13 @@ public class UserService {
     }
 
     public User updateUser(User newUser) {
-        log.info("Поступил запрос на обновление пользователя");
+        log.trace("Поступил запрос на обновление пользователя");
         if (newUser.getId() == null) {
             throw new ValidationException("Введен неверный id");
         }
-        if (userStorage.getById(newUser.getId()).isEmpty()) {
-            throw new UserNotFoundException("Пользователь с указанным id не существует");
-        }
+
+        userStorage.getById(newUser.getId())
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с указанным id не существует"));
 
         userStorage.save(newUser);
         log.info("Пользователь с нужным id найден и обновлен");
@@ -47,44 +48,45 @@ public class UserService {
     }
 
     public List<User> addFriend(Long userId, Long friendId) {
-        Optional<User> user1 = userStorage.getById(userId);
         log.trace("Проверка первого пользователя на null");
-        userExistValidation(user1);
+        User user1 = userStorage.getById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-        Optional<User> user2 = userStorage.getById(friendId);
         log.trace("Проверка второго пользователя на null");
-        userExistValidation(user2);
+        User user2 = userStorage.getById(friendId)
+                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
 
-        Set<Long> set1 = user1.get().getFriendSet();
+        Set<Long> set1 = user1.getFriendSet();
         set1.add(friendId);
 
-        Set<Long> set2 = user2.get().getFriendSet();
+        Set<Long> set2 = user2.getFriendSet();
         set2.add(userId);
 
         log.info("Друг был добавлен");
-        return List.of(user1.get(), user2.get());
+        return List.of(user1, user2);
     }
 
     public List<User> deleteFriend(Long userId, Long friendId) {
-        Optional<User> user1 = userStorage.getById(userId);
         log.trace("Проверка первого пользователя на null");
-        userExistValidation(user1);
+        User user1 = userStorage.getById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-        Optional<User> user2 = userStorage.getById(friendId);
         log.trace("Проверка второго пользователя на null");
-        userExistValidation(user2);
+        User user2 = userStorage.getById(friendId)
+                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
 
-        Set<Long> set1 = user1.get().getFriendSet();
+        Set<Long> set1 = user1.getFriendSet();
         set1.remove(friendId);
 
-        Set<Long> set2 = user2.get().getFriendSet();
+        Set<Long> set2 = user2.getFriendSet();
         set2.remove(userId);
 
         log.info("Друг был удален");
-        return List.of(user1.get(), user2.get());
+        return List.of(user1, user2);
     }
 
     public List<User> showAllFriends(Long userId) {
+        log.trace("Поступил запрос на получение списка всех друзей");
         return userStorage.getById(userId)
                 .map(user ->
                         user.getFriendSet().stream()
@@ -97,23 +99,16 @@ public class UserService {
     }
 
     public List<User> showAllCommonFriends(Long userId, Long friendId) {
-        Optional<User> user1 = userStorage.getById(userId);
         log.trace("Проверка первого пользователя на null");
-        userExistValidation(user1);
+        User user1 = userStorage.getById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-        Optional<User> user2 = userStorage.getById(friendId);
         log.trace("Проверка второго пользователя на null");
-        userExistValidation(user2);
+        User user2 = userStorage.getById(friendId)
+                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
 
-        Set<Long> commonFriendIds = new HashSet<>(user1
-                .map(User::getFriendSet)
-                .orElse(Collections.emptySet())
-        );
-
-        commonFriendIds.retainAll(user2
-                .map(User::getFriendSet)
-                .orElse(Collections.emptySet())
-        );
+        Set<Long> commonFriendIds = new HashSet<>(user1.getFriendSet());
+        commonFriendIds.retainAll(user2.getFriendSet());
         log.trace("Список id общих друзей подготовлен");
 
         return commonFriendIds.stream()
@@ -121,12 +116,5 @@ public class UserService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
-    }
-
-    private void userExistValidation(Optional<User> user) {
-        if (user.isEmpty()) {
-            log.error("Ошибка при поиске пользователя");
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
     }
 }

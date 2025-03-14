@@ -14,19 +14,19 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleFilmNotFoundException(final FilmNotFoundException e) {
+    public ErrorResponse handleFilmNotFoundException(FilmNotFoundException e) {
         return new ErrorResponse("Ошибка с фильмом", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(final ValidationException e) {
+    public ErrorResponse handleValidationException(ValidationException e) {
         return new ErrorResponse("Ошибка валидации", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserValidationException(final UserNotFoundException e) {
+    public ErrorResponse handleUserValidationException(UserNotFoundException e) {
         return new ErrorResponse("Ошибка с пользователем", e.getMessage());
     }
 }

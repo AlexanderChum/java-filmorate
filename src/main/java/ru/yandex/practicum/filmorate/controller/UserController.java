@@ -18,55 +18,47 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<User> getAll() {
+    public List<User> getAllUsers() {
+        log.trace("Запрос на получение списка всех пользователей");
         return userService.getAllUsers();
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
+    public User createUsers(@Valid @RequestBody User user) {
+        log.trace("Запрос на создание нового пользователя");
         return userService.createUser(user);
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
+        log.trace("Запрос на обновление пользователя");
         return userService.updateUser(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public List<User> addFriend(@PathVariable
-                                @Positive
-                                Long id,
-
-                                @PathVariable
-                                @Positive
-                                Long friendId) {
+    public List<User> addFriend(@PathVariable @Positive Long id,
+                                @PathVariable @Positive Long friendId) {
+        log.trace("Запрос на добавление пользователя");
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public List<User> deleteFriend(@PathVariable
-                                   @Positive
-                                   Long id,
-
-                                   @PathVariable
-                                   @Positive
-                                   Long friendId) {
+    public List<User> deleteFriend(@PathVariable @Positive Long id,
+                                   @PathVariable @Positive Long friendId) {
+        log.trace("Запрос на удаление пользователя");
         return userService.deleteFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable @Positive Long id) {
+        log.trace("Запрос на получение списка всех друзей");
         return userService.showAllFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getUserCommonFriends(@PathVariable
-                                           @Positive
-                                           Long id,
-
-                                           @PathVariable
-                                           @Positive
-                                           Long otherId) {
+    public List<User> getUserCommonFriends(@PathVariable @Positive Long id,
+                                           @PathVariable @Positive Long otherId) {
+        log.trace("Запрос на получение списка общих друзей");
         return userService.showAllCommonFriends(id, otherId);
     }
 }

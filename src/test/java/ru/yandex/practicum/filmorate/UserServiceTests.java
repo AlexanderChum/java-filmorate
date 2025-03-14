@@ -17,11 +17,20 @@ import java.util.Optional;
 class UserServiceTests {
     private static UserStorage userStorage;
     private static UserService userService;
+    private User user1 = createTestUser(null);
+    private User user2 = createTestUser(null);
+    private User user3 = createTestUser(null);
+    private User nonExistingUser = createTestUser(999L);
+    private User commonFriend = createTestUser(null);
 
     @BeforeEach
     void setUp() {
         userStorage = new InMemoryUserStorage();
         userService = new UserService(userStorage);
+        userStorage.save(user1);
+        userStorage.save(user2);
+        userStorage.save(user3);
+        userStorage.save(commonFriend);
     }
 
     private User createTestUser(Long id) {
@@ -35,23 +44,15 @@ class UserServiceTests {
 
     @Test
     void getAllUsersShouldReturnAllUsers() {
-        User user1 = createTestUser(1L);
-        User user2 = createTestUser(2L);
-        userStorage.save(user1);
-        userStorage.save(user2);
-
         List<User> users = userService.getAllUsers();
 
-        assertEquals(2, users.size());
+        assertEquals(4, users.size());
         assertEquals(user1, users.get(0));
         assertEquals(user2, users.get(1));
     }
 
     @Test
     void updateUserWhenUserExistsShouldUpdateUserData() {
-        User existingUser = createTestUser(1L);
-        userStorage.save(existingUser);
-
         User updatedUser = createTestUser(1L);
         updatedUser.setEmail("new@mail.com");
         updatedUser.setLogin("new_login");
@@ -64,18 +65,11 @@ class UserServiceTests {
 
     @Test
     void updateUserWhenUserNotExistsShouldThrowException() {
-        User nonExistingUser = createTestUser(999L);
-
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(nonExistingUser));
     }
 
     @Test
     void addFriendShouldAddFriendsToBothUsers() {
-        User user1 = createTestUser(1L);
-        User user2 = createTestUser(2L);
-        userStorage.save(user1);
-        userStorage.save(user2);
-
         userService.addFriend(user1.getId(), user2.getId());
 
         Optional<User> updatedUser1 = userStorage.getById(user1.getId());
@@ -87,11 +81,6 @@ class UserServiceTests {
 
     @Test
     void deleteFriendShouldRemoveFriendsForBothUsers() {
-        User user1 = createTestUser(1L);
-        User user2 = createTestUser(2L);
-        userStorage.save(user1);
-        userStorage.save(user2);
-
         userService.addFriend(user1.getId(), user2.getId());
 
         userService.deleteFriend(user1.getId(), user2.getId());
@@ -105,36 +94,22 @@ class UserServiceTests {
 
     @Test
     void showAllFriendsShouldReturnUserFriends() {
-        User user = createTestUser(1L);
-        User friend1 = createTestUser(2L);
-        User friend2 = createTestUser(3L);
-        userStorage.save(user);
-        userStorage.save(friend1);
-        userStorage.save(friend2);
+        userService.addFriend(user1.getId(), user2.getId());
+        userService.addFriend(user1.getId(), user3.getId());
 
-        userService.addFriend(user.getId(), friend1.getId());
-        userService.addFriend(user.getId(), friend2.getId());
-
-        List<User> friends = userService.showAllFriends(1L);
+        List<User> friends = userService.showAllFriends(user1.getId());
 
         assertEquals(2, friends.size());
-        assertTrue(friends.contains(friend1));
-        assertTrue(friends.contains(friend2));
+        assertTrue(friends.contains(user2));
+        assertTrue(friends.contains(user3));
     }
 
     @Test
     void showCommonFriendsShouldReturnCommonFriends() {
-        User user1 = createTestUser(1L);
-        User user2 = createTestUser(2L);
-        User commonFriend = createTestUser(3L);
-        userStorage.save(user1);
-        userStorage.save(user2);
-        userStorage.save(commonFriend);
-
         userService.addFriend(user1.getId(), commonFriend.getId());
         userService.addFriend(user2.getId(), commonFriend.getId());
 
-        List<User> commonFriends = userService.showAllCommonFriends(1L, 2L);
+        List<User> commonFriends = userService.showAllCommonFriends(user1.getId(), user2.getId());
 
         assertEquals(1, commonFriends.size());
         assertTrue(commonFriends.contains(commonFriend));

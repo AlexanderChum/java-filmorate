@@ -18,15 +18,15 @@ public class UserService {
     private final UserStorage userStorage;
 
     public List<User> getAllUsers() {
-        log.trace("Поступил запрос на получение списка пользователей");
+        log.info("Поступил запрос на получение списка пользователей");
         return userStorage.getAll();
     }
 
     public User createUser(User user) {
-        log.trace("Поступил запрос на создание нового пользователя");
+        log.info("Поступил запрос на создание нового пользователя");
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            log.trace("Пользователь с пустым именем");
+            log.info("Пользователь с пустым именем");
         }
         userStorage.save(user);
         log.info("Создание нового пользователя завершено");
@@ -34,13 +34,12 @@ public class UserService {
     }
 
     public User updateUser(User newUser) {
-        log.trace("Поступил запрос на обновление пользователя");
+        log.info("Поступил запрос на обновление пользователя");
         if (newUser.getId() == null) {
             throw new ValidationException("Введен неверный id");
         }
 
-        userStorage.getById(newUser.getId())
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с указанным id не существует"));
+        userExistence(newUser.getId());
 
         userStorage.save(newUser);
         log.info("Пользователь с нужным id найден и обновлен");
@@ -48,45 +47,41 @@ public class UserService {
     }
 
     public List<User> addFriend(Long userId, Long friendId) {
-        log.trace("Проверка первого пользователя на null");
-        User user1 = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        log.info("Проверка первого пользователя на null");
+        User user = userExistence(userId);
 
-        log.trace("Проверка второго пользователя на null");
-        User user2 = userStorage.getById(friendId)
-                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
+        log.info("Проверка второго пользователя на null");
+        User friend = userExistence(friendId);
 
-        Set<Long> set1 = user1.getFriendSet();
-        set1.add(friendId);
+        Set<Long> setUser = user.getFriendSet();
+        setUser.add(friendId);
 
-        Set<Long> set2 = user2.getFriendSet();
-        set2.add(userId);
+        Set<Long> setFriend = friend.getFriendSet();
+        setFriend.add(userId);
 
         log.info("Друг был добавлен");
-        return List.of(user1, user2);
+        return List.of(user, friend);
     }
 
     public List<User> deleteFriend(Long userId, Long friendId) {
-        log.trace("Проверка первого пользователя на null");
-        User user1 = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        log.info("Проверка первого пользователя на null");
+        User user = userExistence(userId);
 
-        log.trace("Проверка второго пользователя на null");
-        User user2 = userStorage.getById(friendId)
-                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
+        log.info("Проверка второго пользователя на null");
+        User friend = userExistence(friendId);
 
-        Set<Long> set1 = user1.getFriendSet();
-        set1.remove(friendId);
+        Set<Long> setUser = user.getFriendSet();
+        setUser.remove(friendId);
 
-        Set<Long> set2 = user2.getFriendSet();
-        set2.remove(userId);
+        Set<Long> setFriend = friend.getFriendSet();
+        setFriend.remove(userId);
 
         log.info("Друг был удален");
-        return List.of(user1, user2);
+        return List.of(user, friend);
     }
 
     public List<User> showAllFriends(Long userId) {
-        log.trace("Поступил запрос на получение списка всех друзей");
+        log.info("Поступил запрос на получение списка всех друзей");
         return userStorage.getById(userId)
                 .map(user ->
                         user.getFriendSet().stream()
@@ -99,22 +94,25 @@ public class UserService {
     }
 
     public List<User> showAllCommonFriends(Long userId, Long friendId) {
-        log.trace("Проверка первого пользователя на null");
-        User user1 = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        log.info("Проверка первого пользователя на null");
+        User user = userExistence(userId);
 
-        log.trace("Проверка второго пользователя на null");
-        User user2 = userStorage.getById(friendId)
-                .orElseThrow(() -> new UserNotFoundException("Друг не найден"));
+        log.info("Проверка второго пользователя на null");
+        User userToCheck = userExistence(friendId);
 
-        Set<Long> commonFriendIds = new HashSet<>(user1.getFriendSet());
-        commonFriendIds.retainAll(user2.getFriendSet());
-        log.trace("Список id общих друзей подготовлен");
+        Set<Long> commonFriendIds = new HashSet<>(user.getFriendSet());
+        commonFriendIds.retainAll(userToCheck.getFriendSet());
+        log.info("Список id общих друзей подготовлен");
 
         return commonFriendIds.stream()
                 .map(userStorage::getById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
+    }
+
+    private User userExistence(Long id) {
+        return userStorage.getById(id)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с id = " + id + " не найден"));
     }
 }

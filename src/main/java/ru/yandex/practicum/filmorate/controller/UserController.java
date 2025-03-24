@@ -19,39 +19,39 @@ public class UserController {
 
     @GetMapping
     public List<User> getAllUsers() {
-        log.trace("Запрос на получение списка всех пользователей");
+        log.info("Запрос на получение списка всех пользователей");
         return userService.getAllUsers();
     }
 
     @PostMapping
-    public User createUsers(@Valid @RequestBody User user) {
-        log.trace("Запрос на создание нового пользователя");
+    public User createUser(@Valid @RequestBody User user) {
+        log.info("Запрос на создание нового пользователя");
         return userService.createUser(user);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        log.trace("Запрос на обновление пользователя");
+        log.info("Запрос на обновление пользователя");
         return userService.updateUser(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public List<User> addFriend(@PathVariable @Positive Long id,
                                 @PathVariable @Positive Long friendId) {
-        log.trace("Запрос на добавление пользователя");
+        log.info("Запрос на добавление пользователя");
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public List<User> deleteFriend(@PathVariable @Positive Long id,
                                    @PathVariable @Positive Long friendId) {
-        log.trace("Запрос на удаление пользователя");
+        log.info("Запрос на удаление пользователя");
         return userService.deleteFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable @Positive Long id) {
-        log.trace("Запрос на получение списка всех друзей");
+        log.info("Запрос на получение списка всех друзей");
         return userService.showAllFriends(id);
     }
 

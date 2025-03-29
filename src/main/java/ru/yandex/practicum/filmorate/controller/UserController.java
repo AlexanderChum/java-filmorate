@@ -36,15 +36,15 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public List<User> addFriend(@PathVariable @Positive Long id,
-                                @PathVariable @Positive Long friendId) {
+    public User addFriend(@PathVariable @Positive Long id,
+                          @PathVariable @Positive Long friendId) {
         log.info("Запрос на добавление пользователя");
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public List<User> deleteFriend(@PathVariable @Positive Long id,
-                                   @PathVariable @Positive Long friendId) {
+    public User deleteFriend(@PathVariable @Positive Long id,
+                             @PathVariable @Positive Long friendId) {
         log.info("Запрос на удаление пользователя");
         return userService.deleteFriend(id, friendId);
     }

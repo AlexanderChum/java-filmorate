@@ -8,10 +8,10 @@ import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.filmStorage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.filmStorage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.userStorage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.userStorage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -29,7 +29,7 @@ class FilmServiceTests {
     void setUp() {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
-        filmService = new FilmService(filmStorage, userStorage);
+        //filmService = new FilmService(filmStorage, userStorage);
         filmService.createFilm(testFilm1);
         filmService.createFilm(testFilm2);
 

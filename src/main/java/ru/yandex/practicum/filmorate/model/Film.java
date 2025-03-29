@@ -7,7 +7,9 @@ import lombok.Data;
 import ru.yandex.practicum.filmorate.validators.ReleaseDate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -28,4 +30,10 @@ public class Film {
     private Long duration;
 
     private Set<Long> likeSet = new HashSet<>();
+
+    private List<Genre> genres = new ArrayList<>();
+
+    private MPA mpa;
+
+    private Long mpaId;
 }

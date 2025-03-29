@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.userStorage.UserDbStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserStorage userStorage;
+    private final UserDbStorage userDbStorage;
 
     public List<User> getAllUsers() {
         log.info("Поступил запрос на получение списка пользователей");
-        return userStorage.getAll();
+        return userDbStorage.getAll();
     }
 
     public User createUser(User user) {
@@ -28,9 +28,7 @@ public class UserService {
             user.setName(user.getLogin());
             log.info("Пользователь с пустым именем");
         }
-        userStorage.save(user);
-        log.info("Создание нового пользователя завершено");
-        return user;
+        return userDbStorage.save(user);
     }
 
     public User updateUser(User newUser) {
@@ -41,78 +39,90 @@ public class UserService {
 
         userExistence(newUser.getId());
 
-        userStorage.save(newUser);
+        userDbStorage.updateById(newUser.getId(), newUser);
         log.info("Пользователь с нужным id найден и обновлен");
-        return newUser;
+        return userDbStorage.getById(newUser.getId()).get();
     }
 
-    public List<User> addFriend(Long userId, Long friendId) {
+    public User addFriend(Long userId, Long friendId) {
         log.info("Проверка первого пользователя на null");
-        User user = userExistence(userId);
+        userExistence(userId);
 
         log.info("Проверка второго пользователя на null");
-        User friend = userExistence(friendId);
+        userExistence(friendId);
 
-        Set<Long> setUser = user.getFriendSet();
-        setUser.add(friendId);
-
-        Set<Long> setFriend = friend.getFriendSet();
-        setFriend.add(userId);
+        userDbStorage.addFriend(userId, friendId);
+        friendshipStatusCheck(userId, friendId);
 
         log.info("Друг был добавлен");
-        return List.of(user, friend);
+
+        User user = userDbStorage.getById(userId).get();
+        user.setFriendSet(userDbStorage.getFriendsSet(userId));
+        return user;
     }
 
-    public List<User> deleteFriend(Long userId, Long friendId) {
+    public User deleteFriend(Long userId, Long friendId) {
         log.info("Проверка первого пользователя на null");
-        User user = userExistence(userId);
+        userExistence(userId);
 
         log.info("Проверка второго пользователя на null");
-        User friend = userExistence(friendId);
+        userExistence(friendId);
 
-        Set<Long> setUser = user.getFriendSet();
-        setUser.remove(friendId);
+        User user = userDbStorage.getById(userId).get();
 
-        Set<Long> setFriend = friend.getFriendSet();
-        setFriend.remove(userId);
+        if (!userDbStorage.getFriendsSet(userId).contains(friendId)) { //проверка на случай если некого удалять
+            user.setFriendSet(userDbStorage.getFriendsSet(userId));
+            return user;
+        }
+
+        userDbStorage.deleteFriend(userId, friendId);
+        if (userDbStorage.statusCount(friendId, userId) > 0) { //проверка на случай если наш "друг" нас так и не добавил
+            userDbStorage.applyStatusPending(userId, friendId);
+        }
 
         log.info("Друг был удален");
-        return List.of(user, friend);
+        user.setFriendSet(userDbStorage.getFriendsSet(userId));
+        return user;
+    }
+
+    private void friendshipStatusCheck(Long userId, Long friendId) {
+        log.info("Проверка дружбы между пользователями для установления статуса");
+        boolean isMutual = userDbStorage.statusCount(userId, friendId) > 0
+                && userDbStorage.statusCount(friendId, userId) > 0;
+
+        if (isMutual) {
+            userDbStorage.applyStatusApproved(userId, friendId);
+            userDbStorage.applyStatusApproved(friendId, userId);
+        }
     }
 
     public List<User> showAllFriends(Long userId) {
-        log.info("Поступил запрос на получение списка всех друзей");
-        return userStorage.getById(userId)
-                .map(user ->
-                        user.getFriendSet().stream()
-                                .map(userStorage::getById)
-                                .filter(Optional::isPresent)
-                                .map(Optional::get)
-                                .collect(Collectors.toList())
-                )
-                .orElseThrow(() -> new UserNotFoundException("Такого пользователя не существует"));
-    }
-
-    public List<User> showAllCommonFriends(Long userId, Long friendId) {
-        log.info("Проверка первого пользователя на null");
-        User user = userExistence(userId);
-
-        log.info("Проверка второго пользователя на null");
-        User userToCheck = userExistence(friendId);
-
-        Set<Long> commonFriendIds = new HashSet<>(user.getFriendSet());
-        commonFriendIds.retainAll(userToCheck.getFriendSet());
-        log.info("Список id общих друзей подготовлен");
-
-        return commonFriendIds.stream()
-                .map(userStorage::getById)
+        log.info("Поступил запрос на получение списка всех друзей пользователя");
+        userExistence(userId);
+        return userDbStorage.getFriendsSet(userId).stream()
+                .map(id -> userDbStorage.getById(id))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
     }
 
+    public List<User> showAllCommonFriends(Long userId, Long friendId) {
+        log.info("Проверка первого пользователя на null");
+        userExistence(userId);
+
+        log.info("Проверка второго пользователя на null");
+        userExistence(friendId);
+
+        List<User> resultList = new ArrayList<>();
+        for (Long id : userDbStorage.getCommonFriends(userId, friendId)) {
+            resultList.add(userDbStorage.getById(id).get());
+        }
+        log.info("Список общих друзей 2 пользователей получен");
+        return resultList;
+    }
+
     private User userExistence(Long id) {
-        return userStorage.getById(id)
+        return userDbStorage.getById(id)
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id = " + id + " не найден"));
     }
 }

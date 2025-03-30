@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.serviceTests;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import lombok.RequiredArgsConstructor;

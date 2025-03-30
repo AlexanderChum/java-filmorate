@@ -2,7 +2,7 @@
 
 ## **Схема БД**
 
-![QuickDBD-java-Filmorate (1)](https://github.com/user-attachments/assets/78042684-c550-48ef-99b0-7add3a067a1a)
+![Untitled](https://github.com/user-attachments/assets/2bc4bbd6-d3c5-4b8c-b6d6-0a16b6f0bdb2)
 
 ## **Работает с фильмами и оценками пользователей**
 **На данный момент доступен следующий функционал**

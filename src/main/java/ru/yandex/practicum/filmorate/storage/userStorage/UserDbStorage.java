@@ -100,7 +100,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     public int statusCount(Long userId, Long friendId) {
-        log.info("");
+        log.info("Проверка существования 'дружбы' между пользователями");
         return jdbc.queryForObject(GET_STATUS, Integer.class, userId, friendId);
     }
 

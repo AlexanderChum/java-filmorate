@@ -34,6 +34,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private static final String ADD_LIKE = "INSERT INTO likes (user_id, film_id) VALUES(?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+    private static final String GET_LIKES_SET = "SELECT COUNT(*) FROM likes WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper,
                          MPADbStorage mpaDbStorage, GenreDbStorage genreDbStorage) {
@@ -122,5 +123,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public void deleteLike(Long filmId, Long userId) {
         log.info("Попытка удалить лайк из базы данных");
         delete(DELETE_LIKE, filmId, userId);
+    }
+
+    public Set<Long> getLikes(Long filmId) {
+        log.info("Попытка получения количества лайков");
+        return new HashSet<>(jdbc.queryForList(GET_LIKES_SET, Long.class, filmId));
     }
 }

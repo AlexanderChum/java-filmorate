@@ -63,7 +63,7 @@ class FilmServiceTests {
 
         mpaStorage = new MPADbStorage(jdbc, new MpaRowMapper());
         genreStorage = new GenreDbStorage(jdbc, new GenreRowMapper());
-        filmStorage = new FilmDbStorage(jdbc, new FilmRowMapper(),mpaStorage, genreStorage);
+        filmStorage = new FilmDbStorage(jdbc, new FilmRowMapper(), mpaStorage, genreStorage);
         userStorage = new UserDbStorage(jdbc, new UserRowMapper());
 
         filmService = new FilmService(filmStorage, userStorage, mpaStorage, genreStorage);
@@ -110,7 +110,7 @@ class FilmServiceTests {
     @Test
     void createFilmShouldAddFilm() {
         /*не стал выносить filmService.createFilm(testFilm1) в нескольких методах в BeforeEach поскольку зачастую
-        * нужен результат + данный метод должен проверять сам факт создания*/
+         * нужен результат + данный метод должен проверять сам факт создания*/
         Film savedFilm = filmService.createFilm(testFilm1);
 
         assertEquals(1, filmService.getAllFilms().size());

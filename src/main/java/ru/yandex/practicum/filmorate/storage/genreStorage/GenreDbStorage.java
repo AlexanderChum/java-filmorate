@@ -37,7 +37,7 @@ public class GenreDbStorage extends BaseDbStorage<Genre> {
         return findMany(GET_GENRES);
     }
 
-    public List<Genre> getFilmsGenres(Long id){
+    public List<Genre> getFilmsGenres(Long id) {
         return new ArrayList<>(findMany(GET_FILMS_GENRES, id));
     }
 

@@ -47,7 +47,7 @@ class FilmDbStorageTest {
     private Genre testGenreDrama = createTestGenre(null, "Драма");
     private Genre testGenreComedy = createTestGenre(null, "Комедия");
 
-    private User testUser = createTestUser(1l);
+    private User testUser = createTestUser(1L);
     private User testUser2 = createTestUser(2L);
 
 

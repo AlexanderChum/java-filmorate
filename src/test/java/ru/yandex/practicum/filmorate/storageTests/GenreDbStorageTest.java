@@ -49,16 +49,6 @@ class GenreDbStorageTest {
     }
 
     @Test
-    void testDeleteGenreById() {
-        genreTest.setName("Комедия");
-        genreStorage.addGenre(genreTest);
-        genreStorage.deleteGenreById(1L);
-
-        Optional<Genre> deletedGenre = genreStorage.getGenreById(1L);
-        assertThat(deletedGenre).isEmpty();
-    }
-
-    @Test
     void testGetGenreById() {
         genreTest.setName("Фантастика");
         Genre expected = genreStorage.addGenre(genreTest);

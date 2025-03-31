@@ -53,14 +53,6 @@ class MPADbStorageTest {
     }
 
     @Test
-    void testDeleteMpaById() {
-        MPA added = mpaStorage.addMpa(mpa3);
-        mpaStorage.deleteMpaById(added.getId());
-
-        assertThat(mpaStorage.getMpaById(added.getId())).isEmpty();
-    }
-
-    @Test
     void testGetMpaById() {
         mpaStorage.addMpa(mpa1);
         Optional<MPA> result = mpaStorage.getMpaById(1L);

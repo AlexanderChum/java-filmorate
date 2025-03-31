@@ -10,7 +10,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
@@ -127,7 +127,7 @@ class FilmServiceTests {
 
     @Test
     void updateFilmWithWrongIdShouldThrowException() {
-        assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(nonExistFilm));
+        assertThrows(EntityNotFoundException.class, () -> filmService.updateFilm(nonExistFilm));
     }
 
     @Test

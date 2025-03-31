@@ -4,8 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exceptions.GenreNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.MpaNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
@@ -47,7 +46,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public Film save(Film film) {
         log.info("Попытка сохранить фильм в базу данных");
         mpaDbStorage.getMpaById(film.getMpa().getId())
-                .orElseThrow(() -> new MpaNotFoundException("Такого возрастного рейтинга не существует"));
+                .orElseThrow(() -> new EntityNotFoundException("Такого возрастного рейтинга не существует"));
 
         Film savedFilm = insertWithId(INSERT_FILM, GET_FILM_BY_ID,
                 film.getName(),
@@ -65,7 +64,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
             for (Genre genre : uniqueGenres) {
                 genreDbStorage.getGenreById(genre.getId())
-                        .orElseThrow(() -> new GenreNotFoundException("Такого жанра не существует"));
+                        .orElseThrow(() -> new EntityNotFoundException("Такого жанра не существует"));
             }
 
             //привязка id фильма к его жанрам(id)

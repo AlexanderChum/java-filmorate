@@ -3,8 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.genreStorage.GenreDbStorage;
@@ -62,7 +61,7 @@ public class FilmService {
     public Film addLike(Long id, Long userId) {
         log.info("Проверка пользователя на null");
         userDbStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с указанным id не найдено"));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователя с указанным id не найдено"));
 
         log.info("Проверка фильма на null");
         Film film = filmExistence(id);
@@ -75,7 +74,7 @@ public class FilmService {
     public Film deleteLike(Long id, Long userId) {
         log.info("Проверка пользователя на null");
         userDbStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с указанным id не найдено"));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователя с указанным id не найдено"));
 
         log.info("Проверка фильма на null");
         Film film = filmExistence(id);
@@ -98,6 +97,6 @@ public class FilmService {
 
     private Film filmExistence(Long id) {
         return filmDbStorage.getById(id)
-                .orElseThrow(() -> new FilmNotFoundException("Фильма с id = " + id + " не найдено"));
+                .orElseThrow(() -> new EntityNotFoundException("Фильма с id = " + id + " не найдено"));
     }
 }

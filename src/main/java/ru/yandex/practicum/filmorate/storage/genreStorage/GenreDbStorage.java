@@ -25,10 +25,6 @@ public class GenreDbStorage extends BaseDbStorage<Genre> {
         return insertWithId(ADD_GENRE, GET_GENRE_BY_ID, genre.getName()).get();
     }
 
-    public void deleteGenreById(Long id) {
-        delete(DELETE_GENRE, id);
-    }
-
     public Optional<Genre> getGenreById(Long id) {
         return findOne(GET_GENRE_BY_ID, id);
     }

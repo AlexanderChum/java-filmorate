@@ -11,7 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
@@ -82,7 +82,7 @@ class UserServiceTests {
 
     @Test
     void updateNonExistingUserShouldThrow() {
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(nonExistingUser));
+        assertThrows(EntityNotFoundException.class, () -> userService.updateUser(nonExistingUser));
     }
 
     @Test

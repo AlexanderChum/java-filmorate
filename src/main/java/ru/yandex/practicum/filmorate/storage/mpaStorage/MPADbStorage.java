@@ -24,10 +24,6 @@ public class MPADbStorage extends BaseDbStorage<MPA> {
         return insertWithId(ADD_MPA, GET_MPA_BY_ID, mpa.getName()).get();
     }
 
-    public void deleteMpaById(Long id) {
-        delete(DELETE_MPA, id);
-    }
-
     public Optional<MPA> getMpaById(Long id) {
         return findOne(GET_MPA_BY_ID, id);
     }

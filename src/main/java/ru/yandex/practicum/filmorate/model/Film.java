@@ -29,8 +29,6 @@ public class Film {
     @Positive(message = "Длина фильма не может быть меньше 0")
     private Long duration;
 
-    private Set<Long> likeSet = new HashSet<>();
-
     private List<Genre> genres = new ArrayList<>();
 
     private MPA mpa;

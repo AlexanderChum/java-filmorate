@@ -36,9 +36,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String GET_STATUS = "SELECT COUNT(status) FROM friendships WHERE user_id = ?" +
             " AND friend_id = ?";
     private static final String CHANGE_STATUS_APPROVED = "UPDATE friendships SET status = 'approved'" +
-            " WHERE user_id = ? AND friend_id = ?";
+            " WHERE user_id = :userId AND friend_id = :friendId";
     private static final String CHANGE_STATUS_PENDING = "UPDATE friendships SET status = 'pending'" +
-            " WHERE user_id = ? AND friend_id = ?";
+            " WHERE user_id = :userId AND friend_id = :friendId";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -127,6 +127,6 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         params.put("userId", userId);
         params.put("friendId", friendId);
 
-        update(CHANGE_STATUS_PENDING, params);
+        namedJdbc.update(CHANGE_STATUS_PENDING, params);
     }
 }

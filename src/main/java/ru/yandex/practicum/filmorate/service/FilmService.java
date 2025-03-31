@@ -30,6 +30,8 @@ public class FilmService {
 
     public Film getFilmById(Long id) {
         log.info("Поступил запрос на получение фильма по id");
+        filmExistence(id);
+
         Film film = filmDbStorage.getById(id).get();
         film.setGenres(genreDbStorage.getFilmsGenres(id));
         film.setMpa(mpaDbStorage.getMpaById(film.getMpa().getId()).get());

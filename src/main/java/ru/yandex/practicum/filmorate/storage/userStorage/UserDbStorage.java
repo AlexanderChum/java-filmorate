@@ -7,8 +7,10 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,9 +20,10 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String GET_USERS = "SELECT * FROM users";
     private static final String GET_USER_BY_ID = "SELECT * FROM users WHERE id = ?";
     private static final String DELETE_USER_BY_ID = "DELETE FROM users WHERE id = ?";
-    private static final String INSERT_USER = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_BY_ID = "UPDATE users SET login = ?, name = ?, email = ?, birthday = ?" +
-            " WHERE id = ?";
+    private static final String INSERT_USER = "INSERT INTO users (email, login, name, birthday)" +
+            " VALUES (:email, :login, :name, :birthday)";
+    private static final String UPDATE_BY_ID = "UPDATE users SET login = :login, name = :name," +
+            " email = :email, birthday = :birthday WHERE id = :id";
 
     private static final String ADD_FRIEND = "INSERT INTO friendships (user_id, friend_id, status)" +
             " VALUES(?, ?, 'pending')";
@@ -30,7 +33,8 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             " FROM friendships f1 JOIN friendships f2 ON f1.friend_id = f2.friend_id" +
             " WHERE f1.user_id = ? and f2.user_id = ?";
 
-    private static final String GET_STATUS = "SELECT COUNT(status) FROM friendships WHERE user_id = ? AND friend_id =?";
+    private static final String GET_STATUS = "SELECT COUNT(status) FROM friendships WHERE user_id = ?" +
+            " AND friend_id = ?";
     private static final String CHANGE_STATUS_APPROVED = "UPDATE friendships SET status = 'approved'" +
             " WHERE user_id = ? AND friend_id = ?";
     private static final String CHANGE_STATUS_PENDING = "UPDATE friendships SET status = 'pending'" +
@@ -43,11 +47,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public User save(User user) {
         log.info("Попытка добавить пользователя в базу данных");
-        return insertWithId(INSERT_USER, GET_USER_BY_ID,
-                user.getEmail(),
-                user.getLogin(),
-                user.getName(),
-                user.getBirthday()).get();
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", user.getEmail());
+        params.put("login", user.getLogin());
+        params.put("name", user.getName());
+        params.put("birthday", user.getBirthday());
+
+        return insertWithId(INSERT_USER, GET_USER_BY_ID, params).get();
     }
 
     @Override
@@ -71,17 +77,19 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public void updateById(Long id, User user) {
         log.info("Попытка обновить пользователя в базе данных");
-        update(UPDATE_BY_ID,
-                user.getLogin(),
-                user.getName(),
-                user.getEmail(),
-                user.getBirthday(),
-                id);
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", user.getEmail());
+        params.put("login", user.getLogin());
+        params.put("name", user.getName());
+        params.put("birthday", user.getBirthday());
+        params.put("id", id);
+
+        update(UPDATE_BY_ID, params);
     }
 
     public void addFriend(Long userId, Long friendId) {
         log.info("Попытка добавить друга в базе данных");
-        insertWithoutCreatingId(ADD_FRIEND, userId, friendId);
+        jdbc.update(ADD_FRIEND, userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -106,11 +114,19 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     public void applyStatusApproved(Long userId, Long friendId) {
         log.info("Попытка установить статус дружбы ПОДТВЕРЖДЕНО");
-        update(CHANGE_STATUS_APPROVED, userId, friendId);
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("friendId", friendId);
+
+        update(CHANGE_STATUS_APPROVED, params);
     }
 
     public void applyStatusPending(Long userId, Long friendId) {
         log.info("Попытка установить статус дружбы ОТПРАВЛЕНА ЗАЯВКА");
-        update(CHANGE_STATUS_PENDING, friendId, userId);
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("friendId", friendId);
+
+        update(CHANGE_STATUS_PENDING, params);
     }
 }

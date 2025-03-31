@@ -11,26 +11,27 @@ import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import ru.yandex.practicum.filmorate.storage.genreStorage.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpaStorage.MPADbStorage;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
-    private MPADbStorage mpaDbStorage;
-    private GenreDbStorage genreDbStorage;
+    private final MPADbStorage mpaDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
-    private static final String GET_FILMS = "SELECT * FROM films ";
+    private static final String GET_FILMS = "SELECT * FROM films";
     private static final String GET_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
     private static final String DELETE_FILM_BY_ID = "DELETE FROM films WHERE id = ?";
     private static final String INSERT_FILM = "INSERT INTO films (name, description, release_date, duration, mpa_id)" +
-            " VALUES(?,?,?,?,?)";
-    private static final String UPDATE_BY_ID = "UPDATE films SET name = ?, description = ?, release_date = ?," +
-            " duration = ? WHERE id = ?";
+            " VALUES(:name, :description, :releaseDate, :duration, :mpaId)";
+    private static final String UPDATE_BY_ID = "UPDATE films SET name = :name, description = :description," +
+            " release_date = :releaseDate, duration = :duration WHERE id = :id";
 
     private static final String GET_MOST_POPULAR = "SELECT f.id FROM films f " +
             "LEFT JOIN likes l ON f.id = l.film_id GROUP BY f.id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
@@ -54,19 +55,21 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         mpaDbStorage.getMpaById(film.getMpa().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Такого возрастного рейтинга не существует"));
 
-        Film savedFilm = insertWithId(INSERT_FILM, GET_FILM_BY_ID,
-                film.getName(),
-                film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(),
-                film.getMpa().getId()).get();
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", film.getName());
+        params.put("description", film.getDescription());
+        params.put("releaseDate", film.getReleaseDate());
+        params.put("duration", film.getDuration());
+        params.put("mpaId", film.getMpa().getId());
+
+        Film savedFilm = insertWithId(INSERT_FILM, GET_FILM_BY_ID, params).get();
 
         log.info("Обработка жанров для сохраняемого фильма");
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             Set<Long> uniqueIds = new HashSet<>(); //Отсортировываем дубликаты жанров (1,2,1)->(1,2)
             List<Genre> uniqueGenres = film.getGenres().stream()
                     .filter(g -> uniqueIds.add(g.getId()))
-                    .collect(Collectors.toList());
+                    .toList();
 
             for (Genre genre : uniqueGenres) {
                 genreDbStorage.getGenreById(genre.getId())
@@ -124,12 +127,14 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public void updateById(Long id, Film film) {
         log.info("Попытка обновить фильм в базе данных");
-        update(UPDATE_BY_ID,
-                film.getName(),
-                film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(),
-                id);
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", film.getName());
+        params.put("description", film.getDescription());
+        params.put("releaseDate", film.getReleaseDate());
+        params.put("duration", film.getDuration());
+        params.put("id", id);
+
+        update(UPDATE_BY_ID, params);
     }
 
     public List<Long> getMostPopularFilms(Long limit) {
@@ -139,7 +144,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public void addLike(Long filmId, Long userId) {
         log.info("Попытка добавить лайк в базу данных");
-        insertWithoutCreatingId(ADD_LIKE, userId, filmId);
+        jdbc.update(ADD_LIKE, userId, filmId);
     }
 
     public void deleteLike(Long filmId, Long userId) {

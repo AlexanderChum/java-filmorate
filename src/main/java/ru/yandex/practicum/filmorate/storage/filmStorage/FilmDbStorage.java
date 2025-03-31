@@ -11,7 +11,11 @@ import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import ru.yandex.practicum.filmorate.storage.genreStorage.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpaStorage.MPADbStorage;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -20,7 +24,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private MPADbStorage mpaDbStorage;
     private GenreDbStorage genreDbStorage;
 
-    private static final String GET_FILMS = "SELECT * FROM films";
+    private static final String GET_FILMS = "SELECT * FROM films ";
     private static final String GET_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
     private static final String DELETE_FILM_BY_ID = "DELETE FROM films WHERE id = ?";
     private static final String INSERT_FILM = "INSERT INTO films (name, description, release_date, duration, mpa_id)" +
@@ -34,6 +38,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_LIKE = "INSERT INTO likes (user_id, film_id) VALUES(?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String GET_LIKES_SET = "SELECT COUNT(*) FROM likes WHERE film_id = ?";
+
+    private static final String GET_MPAID = "SELECT mpa_id FROM films WHERE id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper,
                          MPADbStorage mpaDbStorage, GenreDbStorage genreDbStorage) {
@@ -76,6 +82,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setGenres(new ArrayList<>());
         }
 
+        savedFilm.setMpa(mpaDbStorage.getMpaById(film.getMpa().getId()).get());
+
         log.info("Попытка сохранить фильм успешна");
         return savedFilm;
     }
@@ -83,13 +91,28 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Optional<Film> getById(Long id) {
         log.info("Попытка получить фильм из базы данных");
-        return findOne(GET_FILM_BY_ID, id);
+        Optional<Film> film = findOne(GET_FILM_BY_ID, id);
+
+        if (film.isPresent()) {
+            Long mpaId = jdbc.queryForObject(GET_MPAID, Long.class, film.get().getId());
+            film.get().setMpa(mpaDbStorage.getMpaById(mpaId).get());
+            return film;
+        } else {
+            throw new EntityNotFoundException("Фильм с таким id не найден");
+        }
     }
 
     @Override
     public List<Film> getAll() {
         log.info("Попытка получить несколько фильмов из базы данных");
-        return findMany(GET_FILMS);
+        List<Film> resultWithMpa = findMany(GET_FILMS);
+
+        for (Film film : resultWithMpa) {
+            Long mpaId = jdbc.queryForObject(GET_MPAID, Long.class, film.getId());
+            film.setMpa(mpaDbStorage.getMpaById(mpaId).get());
+        }
+
+        return resultWithMpa;
     }
 
     @Override
@@ -124,8 +147,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         delete(DELETE_LIKE, filmId, userId);
     }
 
-    public Set<Long> getLikes(Long filmId) {
+    public List<Long> getLikes(Long filmId) {
         log.info("Попытка получения количества лайков");
-        return new HashSet<>(jdbc.queryForList(GET_LIKES_SET, Long.class, filmId));
+        return new ArrayList<>(jdbc.queryForList(GET_LIKES_SET, Long.class, filmId));
     }
 }

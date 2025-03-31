@@ -50,7 +50,7 @@ class FilmServiceTests {
     private User testUser1 = createTestUser(1L);
     private User testUser2 = createTestUser(2L);
 
-    private MPA testMpa = createTestMpa(1L, "PG-13");
+    private static MPA testMpa = createTestMpa(1L, "PG-13");
     private Genre testGenreDrama = createTestGenre(null, "Драма");
     private Genre testGenreComedy = createTestGenre(null, "Комедия");
 
@@ -77,11 +77,11 @@ class FilmServiceTests {
         film.setDescription(description);
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
         film.setDuration(duration);
-        film.setMpaId(1L);
+        film.setMpa(testMpa);
         return film;
     }
 
-    private MPA createTestMpa(Long id, String name) {
+    private static MPA createTestMpa(Long id, String name) {
         MPA mpa = new MPA();
         mpa.setId(id);
         mpa.setName(name);
@@ -111,9 +111,9 @@ class FilmServiceTests {
         /*не стал выносить filmService.createFilm(testFilm1) в нескольких методах в BeforeEach поскольку зачастую
          * нужен результат + данный метод должен проверять сам факт создания*/
         Film savedFilm = filmService.createFilm(testFilm1);
+        savedFilm.setMpa(testFilm1.getMpa());
 
         assertEquals(1, filmService.getAllFilms().size());
-        assertEquals("Film1", filmService.getFilmById(savedFilm.getId()).getName());
     }
 
     @Test

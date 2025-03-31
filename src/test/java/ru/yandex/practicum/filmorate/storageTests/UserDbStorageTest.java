@@ -28,9 +28,9 @@ class UserDbStorageTest {
     private final JdbcTemplate jdbc;
     private final UserDbStorage userStorage;
 
-    private User user1 = createTestUser(null);
-    private User user2 = createTestUser(null);
-    private User user3 = createTestUser(null);
+    private User user1 = createTestUser(1L);
+    private User user2 = createTestUser(2L);
+    private User user3 = createTestUser(3L);
     private User userToUpdate = createTestUser(50L);
 
     @BeforeEach
@@ -54,8 +54,8 @@ class UserDbStorageTest {
         User savedUser = userStorage.save(user1);
 
         assertThat(savedUser)
-                .hasFieldOrPropertyWithValue("email", "null@ya.ru")
-                .hasFieldOrPropertyWithValue("login", "usernull");
+                .hasFieldOrPropertyWithValue("email", "1@ya.ru")
+                .hasFieldOrPropertyWithValue("login", "user1");
 
         assertThat(userStorage.getById(savedUser.getId())).contains(savedUser);
     }
@@ -79,7 +79,7 @@ class UserDbStorageTest {
 
         assertThat(result)
                 .extracting("login")
-                .containsExactly("usernull", "login2");
+                .containsExactly("user1", "login2");
     }
 
     @Test

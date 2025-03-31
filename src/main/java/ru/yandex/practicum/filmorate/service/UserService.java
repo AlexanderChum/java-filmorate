@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.userStorage.UserDbStorage;
 
@@ -35,10 +34,6 @@ public class UserService {
 
     public User updateUser(User newUser) {
         log.info("Поступил запрос на обновление пользователя");
-        if (newUser.getId() == null) {
-            throw new ValidationException("Введен неверный id");
-        }
-
         userExistence(newUser.getId());
 
         userDbStorage.updateById(newUser.getId(), newUser);

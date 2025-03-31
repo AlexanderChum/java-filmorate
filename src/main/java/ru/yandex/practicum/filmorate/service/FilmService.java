@@ -32,7 +32,7 @@ public class FilmService {
         log.info("Поступил запрос на получение фильма по id");
         Film film = filmDbStorage.getById(id).get();
         film.setGenres(genreDbStorage.getFilmsGenres(id));
-        film.setMpa(mpaDbStorage.getMpaById(film.getMpaId()).get());
+        film.setMpa(mpaDbStorage.getMpaById(film.getMpa().getId()).get());
         return film;
     }
 

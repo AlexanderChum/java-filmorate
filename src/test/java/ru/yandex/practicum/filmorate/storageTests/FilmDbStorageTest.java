@@ -27,7 +27,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JdbcTest
 @AutoConfigureTestDatabase
@@ -43,13 +42,13 @@ class FilmDbStorageTest {
     private Film testFilm1 = testFilmCreation(null, "Film1", "New Desc", 110L);
     private Film testFilm2 = testFilmCreation(null, "Film2", "New Desc", 110L);
     private Film filmForUpdate = testFilmCreation(1L, "Updated", "Updated Desc", 110L);
-    private MPA testMpa = createTestMpa(1L, "PG-13");
+    private static MPA testMpa = createTestMpa(1L, "PG-13");
 
     private Genre testGenreDrama = createTestGenre(null, "Драма");
     private Genre testGenreComedy = createTestGenre(null, "Комедия");
 
-    private User testUser = createTestUser(null);
-    private User testUser2 = createTestUser(null);
+    private User testUser = createTestUser(1l);
+    private User testUser2 = createTestUser(2L);
 
 
     @BeforeEach
@@ -63,7 +62,6 @@ class FilmDbStorageTest {
         jdbc.update("ALTER TABLE mpa ALTER COLUMN id RESTART WITH 1");
         jdbc.update("ALTER TABLE genres ALTER COLUMN id RESTART WITH 1");
         jdbc.update("INSERT INTO mpa (name) VALUES('PG-13')");
-        testFilm1.setMpa(testMpa);
     }
 
     private static Film testFilmCreation(Long id, String name, String description, Long duration) {
@@ -73,11 +71,11 @@ class FilmDbStorageTest {
         film.setDescription(description);
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
         film.setDuration(duration);
-        film.setMpaId(1L);
+        film.setMpa(testMpa);
         return film;
     }
 
-    private MPA createTestMpa(Long id, String name) {
+    private static MPA createTestMpa(Long id, String name) {
         MPA mpa = new MPA();
         mpa.setId(id);
         mpa.setName(name);
@@ -150,12 +148,10 @@ class FilmDbStorageTest {
         User user = userStorage.save(testUser);
 
         filmStorage.addLike(film.getId(), user.getId());
-        film.setLikeSet(filmStorage.getLikes(film.getId()));
-        assertTrue(filmStorage.getLikes(film.getId()).contains(1L));
+        assertEquals(1, filmStorage.getLikes(film.getId()).getFirst());
 
         filmStorage.deleteLike(film.getId(), user.getId());
-        film.setLikeSet(filmStorage.getLikes(film.getId()));
-        assertTrue(filmStorage.getLikes(film.getId()).contains(0L));
+        assertEquals(0, filmStorage.getLikes(film.getId()).getFirst());
     }
 
     @Test

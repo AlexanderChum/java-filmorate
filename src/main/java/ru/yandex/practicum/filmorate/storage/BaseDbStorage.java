@@ -59,9 +59,4 @@ public class BaseDbStorage<T> {
         Long id = keyHolder.getKeyAs(Long.class);
         return findOne(selectQuery, id);
     }
-
-    protected void insertWithoutCreatingId(String query, Map<String, Object> params) {
-        int rowsAdded = namedJdbc.update(query, params);
-        if (rowsAdded == 0) throw new InternalDatabaseException("Не удалось добавить данные");
-    }
 }

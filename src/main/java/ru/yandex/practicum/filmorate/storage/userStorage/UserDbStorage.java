@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
@@ -11,7 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -53,13 +53,15 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         params.put("name", user.getName());
         params.put("birthday", user.getBirthday());
 
-        return insertWithId(INSERT_USER, GET_USER_BY_ID, params).get();
+        return insertWithId(INSERT_USER, GET_USER_BY_ID, params)
+                .orElseThrow(() -> new EntityNotFoundException("Не удалось добавить пользователя"));
     }
 
     @Override
-    public Optional<User> getById(Long id) {
+    public User getOrCheckById(Long id) {
         log.info("Попытка найти пользователя в базе данных");
-        return findOne(GET_USER_BY_ID, id);
+        return findOne(GET_USER_BY_ID, id)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с таким id не найден"));
     }
 
     @Override
@@ -75,7 +77,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public void updateById(Long id, User user) {
+    public User updateById(Long id, User user) {
         log.info("Попытка обновить пользователя в базе данных");
         Map<String, Object> params = new HashMap<>();
         params.put("email", user.getEmail());
@@ -85,6 +87,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         params.put("id", id);
 
         update(UPDATE_BY_ID, params);
+        return getOrCheckById(id);
     }
 
     public void addFriend(Long userId, Long friendId) {

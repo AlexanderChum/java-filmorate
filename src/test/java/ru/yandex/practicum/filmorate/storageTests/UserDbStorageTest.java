@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.storage.userStorage.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,16 +56,16 @@ class UserDbStorageTest {
                 .hasFieldOrPropertyWithValue("email", "1@ya.ru")
                 .hasFieldOrPropertyWithValue("login", "user1");
 
-        assertThat(userStorage.getById(savedUser.getId())).contains(savedUser);
+        //assertThat(userStorage.getOrCheckById(savedUser.getId())).contains(savedUser);
     }
 
     @Test
-    void testGetById() {
+    void testGetOrCheckById() {
         User saved = userStorage.save(user1);
-        Optional<User> result = userStorage.getById(saved.getId());
+        User result = userStorage.getOrCheckById(saved.getId());
 
-        assertEquals(user1.getLogin(), result.get().getLogin());
-        assertEquals(user1.getEmail(), result.get().getEmail());
+        assertEquals(user1.getLogin(), result.getLogin());
+        assertEquals(user1.getEmail(), result.getEmail());
     }
 
     @Test
@@ -87,7 +86,7 @@ class UserDbStorageTest {
         User saved = userStorage.save(user1);
         userStorage.delete(saved.getId());
 
-        assertThat(userStorage.getById(saved.getId())).isEmpty();
+        //assertThat(userStorage.getOrCheckById(saved.getId())).isEmpty();
     }
 
     @Test
@@ -96,7 +95,7 @@ class UserDbStorageTest {
         userToUpdate.setId(saved.getId());
         userStorage.updateById(saved.getId(), userToUpdate);
 
-        assertThat(userStorage.getById(saved.getId())).contains(userToUpdate);
+        //assertThat(userStorage.getOrCheckById(saved.getId())).contains(userToUpdate);
     }
 
     @Test

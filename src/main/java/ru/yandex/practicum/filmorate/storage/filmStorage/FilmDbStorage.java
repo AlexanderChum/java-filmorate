@@ -52,8 +52,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Film save(Film film) {
         log.info("Попытка сохранить фильм в базу данных");
-        mpaDbStorage.getMpaById(film.getMpa().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Такого возрастного рейтинга не существует"));
+        mpaDbStorage.getOrCheckMpaById(film.getMpa().getId());
 
         Map<String, Object> params = new HashMap<>();
         params.put("name", film.getName());
@@ -72,8 +71,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     .toList();
 
             for (Genre genre : uniqueGenres) {
-                genreDbStorage.getGenreById(genre.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Такого жанра не существует"));
+                genreDbStorage.getOrCheckGenreById(genre.getId());
             }
 
             //привязка id фильма к его жанрам(id)
@@ -85,21 +83,21 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setGenres(new ArrayList<>());
         }
 
-        savedFilm.setMpa(mpaDbStorage.getMpaById(film.getMpa().getId()).get());
+        savedFilm.setMpa(mpaDbStorage.getOrCheckMpaById(film.getMpa().getId()));
 
         log.info("Попытка сохранить фильм успешна");
         return savedFilm;
     }
 
     @Override
-    public Optional<Film> getById(Long id) {
+    public Film getOrCheckById(Long id) {
         log.info("Попытка получить фильм из базы данных");
         Optional<Film> film = findOne(GET_FILM_BY_ID, id);
 
         if (film.isPresent()) {
             Long mpaId = jdbc.queryForObject(GET_MPAID, Long.class, film.get().getId());
-            film.get().setMpa(mpaDbStorage.getMpaById(mpaId).get());
-            return film;
+            film.get().setMpa(mpaDbStorage.getOrCheckMpaById(mpaId));
+            return film.get();
         } else {
             throw new EntityNotFoundException("Фильм с таким id не найден");
         }
@@ -112,7 +110,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         for (Film film : resultWithMpa) {
             Long mpaId = jdbc.queryForObject(GET_MPAID, Long.class, film.getId());
-            film.setMpa(mpaDbStorage.getMpaById(mpaId).get());
+            film.setMpa(mpaDbStorage.getOrCheckMpaById(mpaId));
         }
 
         return resultWithMpa;
@@ -125,7 +123,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public void updateById(Long id, Film film) {
+    public Film updateById(Long id, Film film) {
         log.info("Попытка обновить фильм в базе данных");
         Map<String, Object> params = new HashMap<>();
         params.put("name", film.getName());
@@ -135,6 +133,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         params.put("id", id);
 
         update(UPDATE_BY_ID, params);
+        return getOrCheckById(id);
     }
 
     public List<Long> getMostPopularFilms(Long limit) {

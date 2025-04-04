@@ -24,7 +24,6 @@ import ru.yandex.practicum.filmorate.storage.userStorage.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,10 +114,10 @@ class FilmDbStorageTest {
     @Test
     void testGetFilmByIdWithRelations() {
         Film saved = filmStorage.save(testFilm1);
-        Optional<Film> result = filmStorage.getById(saved.getId());
+        Film result = filmStorage.getOrCheckById(saved.getId());
 
-        assertEquals(saved.getName(), result.get().getName());
-        assertEquals(saved.getDescription(), result.get().getDescription());
+        assertEquals(saved.getName(), result.getName());
+        assertEquals(saved.getDescription(), result.getDescription());
     }
 
     @Test
@@ -126,11 +125,9 @@ class FilmDbStorageTest {
         Film saved = filmStorage.save(testFilm1);
 
         filmStorage.updateById(saved.getId(), filmForUpdate);
-        Optional<Film> result = filmStorage.getById(saved.getId());
+        Film result = filmStorage.getOrCheckById(saved.getId());
 
         assertThat(result)
-                .isPresent()
-                .get()
                 .hasFieldOrPropertyWithValue("name", "Updated")
                 .hasFieldOrPropertyWithValue("description", "Updated Desc");
     }
@@ -140,7 +137,7 @@ class FilmDbStorageTest {
         Film saved = filmStorage.save(testFilm1);
         filmStorage.deleteFilmById(saved.getId());
 
-        assertThrows(EntityNotFoundException.class, () -> filmStorage.getById(saved.getId()));
+        assertThrows(EntityNotFoundException.class, () -> filmStorage.getOrCheckById(saved.getId()));
     }
 
     @Test
@@ -184,7 +181,7 @@ class FilmDbStorageTest {
         Film filmWithGenres = filmStorage.save(testFilm1);
 
 
-        Film result = filmStorage.getById(filmWithGenres.getId()).get();
+        Film result = filmStorage.getOrCheckById(filmWithGenres.getId());
         result.setGenres(genreStorage.getFilmsGenres(result.getId()));
         assertThat(result)
                 .extracting(Film::getGenres)

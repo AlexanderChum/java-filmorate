@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.storage.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpaStorage.MPADbStorage;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,11 +52,11 @@ class MPADbStorageTest {
     }
 
     @Test
-    void testGetMpaById() {
+    void testGetOrCheckMpaById() {
         mpaStorage.addMpa(mpa1);
-        Optional<MPA> result = mpaStorage.getMpaById(1L);
+        MPA result = mpaStorage.getOrCheckMpaById(1L);
 
-        assertEquals(mpa1.getName(), result.get().getName());
+        assertEquals(mpa1.getName(), result.getName());
     }
 
     @Test

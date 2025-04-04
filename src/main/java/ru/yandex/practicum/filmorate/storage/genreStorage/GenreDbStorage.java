@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.genreStorage;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
@@ -10,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 
 @Repository
 public class GenreDbStorage extends BaseDbStorage<Genre> {
@@ -27,11 +27,13 @@ public class GenreDbStorage extends BaseDbStorage<Genre> {
     public Genre addGenre(Genre genre) {
         Map<String, Object> params = new HashMap<>();
         params.put("name", genre.getName());
-        return insertWithId(ADD_GENRE, GET_GENRE_BY_ID, params).get();
+        return insertWithId(ADD_GENRE, GET_GENRE_BY_ID, params)
+                .orElseThrow(() -> new EntityNotFoundException("Не удалось добавить жанр"));
     }
 
-    public Optional<Genre> getGenreById(Long id) {
-        return findOne(GET_GENRE_BY_ID, id);
+    public Genre getOrCheckGenreById(Long id) {
+        return findOne(GET_GENRE_BY_ID, id)
+                .orElseThrow(() -> new EntityNotFoundException("Не удалось найти жанр"));
     }
 
     public List<Genre> getAllGenres() {

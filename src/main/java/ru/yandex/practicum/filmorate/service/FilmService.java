@@ -3,34 +3,46 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.genreStorage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpaStorage.MPADbStorage;
+import ru.yandex.practicum.filmorate.storage.filmStorage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.userStorage.UserStorage;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final FilmStorage filmDbStorage;
+    private final UserStorage userDbStorage;
+    private final MPADbStorage mpaDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     public List<Film> getAllFilms() {
         log.info("Поступил запрос на получение списка фильмов");
-        return filmStorage.getAll();
+        return filmDbStorage.getAll();
+    }
+
+    public Film getFilmById(Long id) {
+        log.info("Поступил запрос на получение фильма по id");
+        Film film = filmDbStorage.getOrCheckById(id);
+
+        film.setGenres(genreDbStorage.getFilmsGenres(id));
+        film.setMpa(mpaDbStorage.getOrCheckMpaById(film.getMpa().getId()));
+        return film;
     }
 
     public Film createFilm(Film film) {
         log.info("Поступил запрос на добавление нового фильма");
-        filmStorage.save(film);
-        log.info("Добавление нового фильма завершено");
-        return film;
+        Film savedFilm = filmDbStorage.save(film);
+        savedFilm.setMpa(mpaDbStorage.getOrCheckMpaById(film.getMpa().getId()));
+        savedFilm.setGenres(genreDbStorage.getFilmsGenres(savedFilm.getId()));
+        log.info("Фильм успешно сохранен");
+        return savedFilm;
     }
 
     public Film updateFilm(Film newFilm) {
@@ -39,49 +51,43 @@ public class FilmService {
             throw new ValidationException("Введен неверный id");
         }
 
-        filmExistence(newFilm.getId());
+        filmDbStorage.getOrCheckById(newFilm.getId());
 
-        filmStorage.save(newFilm);
-        log.info("Фильм с нужным id найден и обновлен");
-        return newFilm;
+        return filmDbStorage.updateById(newFilm.getId(), newFilm);
     }
 
     public Film addLike(Long id, Long userId) {
         log.info("Проверка пользователя на null");
-        userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с указанным id не найдено"));
+        userDbStorage.getOrCheckById(userId);
 
         log.info("Проверка фильма на null");
-        Film film = filmExistence(id);
+        Film film = filmDbStorage.getOrCheckById(id);
 
-        film.getLikeSet().add(userId);
+        filmDbStorage.addLike(id, userId);
         log.info("Лайк от пользователя добавлен");
         return film;
     }
 
     public Film deleteLike(Long id, Long userId) {
         log.info("Проверка пользователя на null");
-        userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователя с указанным id не найдено"));
+        userDbStorage.getOrCheckById(userId);
 
         log.info("Проверка фильма на null");
-        Film film = filmExistence(id);
+        Film film = filmDbStorage.getOrCheckById(id);
 
-        film.getLikeSet().remove(userId);
+        filmDbStorage.deleteLike(id, userId);
         log.info("Лайк от пользователя удален");
         return film;
     }
 
-    public List<Film> showMostPopularFilms(Long count) {
+    public List<Film> showMostPopularFilms(Long limit) {
         log.info("Поступил запрос на получение списка популярных фильмов");
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikeSet().size()).reversed())
-                .limit(Math.min(count, filmStorage.getAll().size()))
-                .collect(Collectors.toList());
-    }
-
-    private Film filmExistence(Long id) {
-        return filmStorage.getById(id)
-                .orElseThrow(() -> new FilmNotFoundException("Фильма с id = " + id + " не найдено"));
+        List<Film> resultList = new ArrayList<>();
+        List<Long> filmIds = filmDbStorage.getMostPopularFilms(limit);
+        for (Long id : filmIds) {
+            resultList.add(filmDbStorage.getOrCheckById(id));
+        }
+        log.info("Список популярных фильмов создан");
+        return resultList;
     }
 }

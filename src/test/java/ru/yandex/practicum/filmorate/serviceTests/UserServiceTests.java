@@ -1,31 +1,48 @@
-package ru.yandex.practicum.filmorate;
+package ru.yandex.practicum.filmorate.serviceTests;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.exceptions.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.userStorage.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
+@JdbcTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Import({UserDbStorage.class, UserRowMapper.class})
 class UserServiceTests {
-    private static UserStorage userStorage;
-    private static UserService userService;
-    private User user1 = createTestUser(null);
-    private User user2 = createTestUser(null);
-    private User user3 = createTestUser(null);
+    @Autowired
+    private JdbcTemplate jdbc;
+    private UserDbStorage userStorage;
+    private UserService userService;
+
+    private User user1 = createTestUser(1L);
+    private User user2 = createTestUser(2L);
+    private User user3 = createTestUser(3L);
     private User nonExistingUser = createTestUser(999L);
-    private User commonFriend = createTestUser(null);
+    private User commonFriend = createTestUser(4L);
 
     @BeforeEach
     void setUp() {
-        userStorage = new InMemoryUserStorage();
+        jdbc.update("DELETE FROM friendships");
+        jdbc.update("DELETE FROM users");
+        jdbc.update("ALTER TABLE users ALTER COLUMN id RESTART WITH 1");
+
+        userStorage = new UserDbStorage(jdbc, new UserRowMapper());
         userService = new UserService(userStorage);
         userStorage.save(user1);
         userStorage.save(user2);
@@ -46,9 +63,9 @@ class UserServiceTests {
     void getAllUsersShouldReturnAllUsers() {
         List<User> users = userService.getAllUsers();
 
-        assertEquals(4, users.size());
-        assertEquals(user1, users.get(0));
-        assertEquals(user2, users.get(1));
+        assertThat(users)
+                .extracting(User::getLogin)
+                .containsExactly("user1", "user2", "user3", "user4");
     }
 
     @Test
@@ -64,32 +81,19 @@ class UserServiceTests {
     }
 
     @Test
-    void updateUserWhenUserNotExistsShouldThrowException() {
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(nonExistingUser));
+    void updateNonExistingUserShouldThrow() {
+        assertThrows(EntityNotFoundException.class, () -> userService.updateUser(nonExistingUser));
     }
 
     @Test
-    void addFriendShouldAddFriendsToBothUsers() {
+    void addAndRemoveFriendShouldWork() {
         userService.addFriend(user1.getId(), user2.getId());
-
-        Optional<User> updatedUser1 = userStorage.getById(user1.getId());
-        Optional<User> updatedUser2 = userStorage.getById(user2.getId());
-
-        assertTrue(updatedUser1.get().getFriendSet().contains(user2.getId()));
-        assertTrue(updatedUser2.get().getFriendSet().contains(user1.getId()));
-    }
-
-    @Test
-    void deleteFriendShouldRemoveFriendsForBothUsers() {
-        userService.addFriend(user1.getId(), user2.getId());
+        assertThat(userService.showAllFriends(user1.getId()))
+                .extracting(User::getId)
+                .containsExactly(user2.getId());
 
         userService.deleteFriend(user1.getId(), user2.getId());
-
-        Optional<User> updatedUser1 = userStorage.getById(user1.getId());
-        Optional<User> updatedUser2 = userStorage.getById(user2.getId());
-
-        assertFalse(updatedUser1.get().getFriendSet().contains(user2.getId()));
-        assertFalse(updatedUser2.get().getFriendSet().contains(user1.getId()));
+        assertThat(userService.showAllFriends(user1.getId())).isEmpty();
     }
 
     @Test
